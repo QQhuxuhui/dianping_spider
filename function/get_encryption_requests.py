@@ -97,10 +97,8 @@ def get_basic_hidden_info(shop_id):
           '&partner=150' \
           '&optimusCode=10' \
           '&originUrl=' + str(shop_url)
-
     r = requests_util.get_request_for_interface(url)
     r_json = json.loads(requests_util.replace_json_text(r.text, get_font_msg()))
-
     if r_json['code'] == 200:
         msg = r_json['msg']['shopInfo']
         shop_name = msg['shopName']
