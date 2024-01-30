@@ -147,3 +147,113 @@ class Search():
             search_res.append(one_step_search_res)
             # yield one_step_search_res
         return search_res
+
+
+
+    def searchParams(self, search_url, request_type='proxy, cookie', last_chance=False):
+        """
+        搜索
+        :param key_word: 关键字
+        :param only_need_first: 只需要第一条
+        :param needed_pages: 需要多少页
+        :return:
+        """
+        if self.is_ban and spider_config.USE_COOKIE_POOL is False:
+            logger.warning('搜索页请求被ban，程序终止')
+            sys.exit()
+
+        r = requests_util.get_requests(search_url, request_type=request_type)
+        # 给一次retry的机会，如果依然403则判断为被ban
+        if r.status_code == 403:
+            if last_chance is True:
+                self.is_ban = True
+            return self.search(search_url=search_url, request_type=request_type, last_chance=True)
+        text = r.text
+        # 获取加密文件
+        file_map = get_search_map_file(text)
+        # 替换加密文件
+        text = requests_util.replace_search_html(text, file_map)
+
+        # 网页解析
+        html = BeautifulSoup(text, 'lxml')
+        # print(html)
+        # 如果页面出现了not-found(无数据)提示，返回None给上一层，让上一层的for循环退出
+        if html.select(".not-found-right"):
+            return None
+        # 获取分类列表
+        classfy_list = html.select('#classfy a')
+        search_res = []
+        for classfy in classfy_list:
+            try:
+                classfy_href = classfy.get('href')
+                # 获取子分类
+                print("子分类连接：", classfy_href)
+                search_res = self.classfySub(classfy_href, request_type);
+            except:
+                classfy_href = '-'
+            # # 获取子分类列表
+            # try:
+            #     classfy_id = classfy.get('data-cat-id')
+            # except:
+            #     classfy_id = '-'
+            # one_step_search_res = {
+            #     'href': classfy_href,
+            #     'id': classfy_id
+            # }
+            # search_res.append(one_step_search_res)
+        return search_res
+    
+
+
+    def classfySub(self, search_url, request_type='proxy, cookie', last_chance=False):
+        """
+        搜索
+        :param key_word: 关键字
+        :param only_need_first: 只需要第一条
+        :param needed_pages: 需要多少页
+        :return:
+        """
+        if self.is_ban and spider_config.USE_COOKIE_POOL is False:
+            logger.warning('搜索页请求被ban，程序终止')
+            sys.exit()
+
+        r = requests_util.get_requests(search_url, request_type=request_type)
+        # 给一次retry的机会，如果依然403则判断为被ban
+        if r.status_code == 403:
+            if last_chance is True:
+                self.is_ban = True
+            return self.search(search_url=search_url, request_type=request_type, last_chance=True)
+        text = r.text
+        # 获取加密文件
+        file_map = get_search_map_file(text)
+        # 替换加密文件
+        text = requests_util.replace_search_html(text, file_map)
+
+        # 网页解析
+        html = BeautifulSoup(text, 'lxml')
+        # print(html)
+        # 如果页面出现了not-found(无数据)提示，返回None给上一层，让上一层的for循环退出
+        if html.select(".not-found-right"):
+            return None
+        # 获取分类列表
+        classfy_list = html.select('#classfy-sub a')
+        print("子分类连接列表：", classfy_list)
+        search_res = []
+        for classfy in classfy_list:
+            # 获取子分类列表
+            try:
+                classfy_href = classfy.get('href')
+            except:
+                classfy_href = None
+            try:
+                classfy_id = classfy.get('data-cat-id')
+            except:
+                classfy_id = None
+            if classfy_id & classfy_href:
+                one_step_search_res = {
+                    'href': classfy_href,
+                    'id': classfy_id
+                }
+            print(one_step_search_res)
+            search_res.append(one_step_search_res)
+        return search_res    

@@ -60,7 +60,16 @@ class Controller():
         # Todo  其实这里挺犹豫是爬取完搜索直接详情还是爬一段详情一段
         #       本着稀释同类型访问频率的原则，暂时采用爬一段详情一段
         # 调用搜索
+        search_url, request_type = self.get_search_url(1)
+        search_res = self.s.searchParams(search_url, request_type)
+        print(search_res)
+        return;
+
+
         for page in tqdm(range(1, spider_config.NEED_SEARCH_PAGES + 1), desc='搜索页数'):
+            # if page <12:
+            #     continue;
+            print("当前搜索页:", page) 
             # 拼凑url
             search_url, request_type = self.get_search_url(page)
             """
@@ -82,6 +91,7 @@ class Controller():
             search_res = self.s.search(search_url, request_type)
             # search方法如果返回None，代表页面已经没有数据了
             if not search_res:
+                print("抓取到第",page, "页已经没有数据了, 抓取结束")
                 break
 
             if spider_config.NEED_DETAIL is False and spider_config.NEED_REVIEW is False:
@@ -211,9 +221,10 @@ class Controller():
 
 
                 self.saver(each_search_res, each_review_res)
-            # 如果这一页数据小于15，代表下一页已经没有数据了，直接退出
-            if len(search_res) < 15:
-                break
+                # 如果这一页数据小于15，代表下一页已经没有数据了，直接退出
+                if len(search_res) < 15:
+                    print("当前页数据少于15，判定下一页无数据，跳出当前页：", page, "的详细数据抓取循环")
+                    break
 
     def get_review(self, shop_id, detail=False):
         if detail:
