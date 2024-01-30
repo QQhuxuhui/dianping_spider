@@ -54,7 +54,7 @@ class Saver():
         :param data_type:
         :return:
         """
-        assert data_type in ['search', 'detail', 'review']
+        assert data_type in ['search', 'detail', 'review', 'region', 'classfy']
         for each in self.saver_list:
             each.save_data(data, data_type)
 

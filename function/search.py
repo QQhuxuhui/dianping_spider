@@ -27,6 +27,7 @@ from utils.logger import logger
 from utils.get_font_map import get_search_map_file
 from utils.requests_utils import requests_util
 from utils.spider_config import spider_config
+from utils.saver.saver import saver
 
 
 class Search():
@@ -176,32 +177,52 @@ class Search():
 
         # 网页解析
         html = BeautifulSoup(text, 'lxml')
-        # print(html)
         # 如果页面出现了not-found(无数据)提示，返回None给上一层，让上一层的for循环退出
         if html.select(".not-found-right"):
             return None
+        
+        # 获取地点列表
+        region_list = self.regions('https://www.dianping.com/search/keyword/92/10_%E7%BE%8E%E9%A3%9F/r3862',request_type)
+        for region in region_list:
+            print('保存区域：', region)
+            saver.save_data(region, 'region')
+
+
         # 获取分类列表
-        classfy_list = html.select('#classfy a')
-        search_res = []
-        for classfy in classfy_list:
+        classfy_a = html.select('#classfy a')
+        classfy_list = []
+        for classfy in classfy_a:
             try:
                 classfy_href = classfy.get('href')
+            except:
+                classfy_href = None
+            try:
+                classfy_id = classfy.get('data-cat-id')
+            except:
+                classfy_id = None
+            try:
+                classfy_text = classfy.find('span').text
+            except:
+                classfy_text = None   
+            if classfy_href is not None and classfy_id is not None and classfy_text is not None:             
                 # 获取子分类
                 print("子分类连接：", classfy_href)
-                search_res = self.classfySub(classfy_href, request_type);
-            except:
-                classfy_href = '-'
-            # # 获取子分类列表
-            # try:
-            #     classfy_id = classfy.get('data-cat-id')
-            # except:
-            #     classfy_id = '-'
-            # one_step_search_res = {
-            #     'href': classfy_href,
-            #     'id': classfy_id
-            # }
-            # search_res.append(one_step_search_res)
-        return search_res
+                classfy_sub_list = self.classfySub(classfy_href, request_type);
+            if not classfy_sub_list: # 子分类为空，则以第一级分类查询
+                one_step_search_res = {
+                    'href': classfy_href,
+                    '分类id': classfy_id, 
+                    '分类名称': classfy_text
+                }
+                # print(one_step_search_res)
+                classfy_sub_list.append(one_step_search_res)
+                
+            classfy_list.extend(classfy_sub_list)
+        for classfy in classfy_list:
+            print('保存分类：', classfy)
+            saver.save_data(classfy, 'classfy')
+
+        return classfy_list
     
 
 
@@ -236,24 +257,148 @@ class Search():
         if html.select(".not-found-right"):
             return None
         # 获取分类列表
-        classfy_list = html.select('#classfy-sub a')
-        print("子分类连接列表：", classfy_list)
         search_res = []
-        for classfy in classfy_list:
+        classfy_sub_list = html.select('#classfy-sub a')
+        print("子分类连接列表：", classfy_sub_list)
+        if not classfy_sub_list:
+            # 返回空表示没有子分类，交予上层调用空数组
+            return [];
+        for classfy_sub in classfy_sub_list:
+            # print("-------", classfy_sub)
             # 获取子分类列表
             try:
-                classfy_href = classfy.get('href')
+                classfy_href = classfy_sub.get('href')
             except:
                 classfy_href = None
             try:
-                classfy_id = classfy.get('data-cat-id')
+                classfy_id = classfy_sub.get('data-cat-id')
             except:
                 classfy_id = None
-            if classfy_id & classfy_href:
+            try:
+                classfy_text = classfy_sub.find('span').text
+            except:
+                classfy_text = None    
+            # print(classfy_href)
+            # print(classfy_id)
+            # print(classfy_text)
+            if classfy_id is not None and classfy_href is not None and classfy_text:
                 one_step_search_res = {
                     'href': classfy_href,
-                    'id': classfy_id
+                    '分类id': classfy_id, 
+                    '分类名称': classfy_text
                 }
-            print(one_step_search_res)
-            search_res.append(one_step_search_res)
+                # print(one_step_search_res)
+                search_res.append(one_step_search_res)
         return search_res    
+    
+    #  获取所有行政区地点位置，这里的url需要写死，爬取徐州的就写死：https://www.dianping.com/search/keyword/92/10_%E7%BE%8E%E9%A3%9F/r3862
+    def regions(self, search_url, request_type='proxy, cookie', last_chance=False):
+        """
+        搜索
+        :param key_word: 关键字
+        :param only_need_first: 只需要第一条
+        :param needed_pages: 需要多少页
+        :return:
+        """
+        if self.is_ban and spider_config.USE_COOKIE_POOL is False:
+            logger.warning('搜索页请求被ban，程序终止')
+            sys.exit()
+
+        r = requests_util.get_requests(search_url, request_type=request_type)
+        # 给一次retry的机会，如果依然403则判断为被ban
+        if r.status_code == 403:
+            if last_chance is True:
+                self.is_ban = True
+            return self.search(search_url=search_url, request_type=request_type, last_chance=True)
+        text = r.text
+        # 获取加密文件
+        file_map = get_search_map_file(text)
+        # 替换加密文件
+        text = requests_util.replace_search_html(text, file_map)
+
+        # 网页解析
+        html = BeautifulSoup(text, 'lxml')
+        # print(html)
+        # 如果页面出现了not-found(无数据)提示，返回None给上一层，让上一层的for循环退出
+        if html.select(".not-found-right"):
+            return None
+        # 获取一级区域
+        one_region_list = html.select('#region-nav a')
+        print("一级区域", one_region_list)
+        search_res = []
+        for one_region in one_region_list:
+            print("-------", one_region)
+            # 获取子分类列表
+            try:
+                one_region_href = one_region.get('href')
+            except:
+                one_region_href = None
+            try:
+                one_region_id = one_region.get('data-cat-id')
+            except:
+                one_region_id = None
+            try:
+                one_region_text = one_region.find('span').text
+            except:
+                one_region_text = None    
+            # print(classfy_href)
+            # print(classfy_id)
+            # print(classfy_text)
+            if one_region_id is not None and one_region_href is not None and one_region_text:
+                # one_step_search_res = {
+                #     'href': one_region_href,
+                #     'id': one_region_id, 
+                #     'text': one_region_text
+                # }
+                result = self.subRegion(one_region_href, request_type)
+                search_res.extend(result)
+                # print(search_res)
+                # search_res.append(one_step_search_res)
+        return search_res      
+    
+    # 通过一级区域连接获取二级区域
+    def subRegion(self, search_url, request_type='proxy, cookie', last_chance=False):
+        if self.is_ban and spider_config.USE_COOKIE_POOL is False:
+            logger.warning('搜索页请求被ban，程序终止')
+            sys.exit()
+        r = requests_util.get_requests(search_url, request_type=request_type)
+        # 给一次retry的机会，如果依然403则判断为被ban
+        if r.status_code == 403:
+            if last_chance is True:
+                self.is_ban = True
+            return self.search(search_url=search_url, request_type=request_type, last_chance=True)
+        text = r.text
+        # 获取加密文件
+        file_map = get_search_map_file(text)
+        # 替换加密文件
+        text = requests_util.replace_search_html(text, file_map)
+
+        # 网页解析
+        html = BeautifulSoup(text, 'lxml')
+        # 如果页面出现了not-found(无数据)提示，返回None给上一层，让上一层的for循环退出
+        if html.select(".not-found-right"):
+            return None
+        # 获取二级区域列表
+        two_region_list = html.select('#region-nav-sub a')
+        two_region_res = []
+        for two_region in two_region_list:
+            try:
+                two_region_href = two_region.get('href')
+            except:
+                two_region_href = None
+            try:
+                two_region_id = two_region.get('data-cat-id')
+            except:
+                two_region_id = None
+            try:
+                two_region_text = two_region.find('span').text
+            except:
+                two_region_text = None
+            if two_region_id is not None and two_region_href is not None and two_region_text:
+                one_step_search_res = {
+                    'href': two_region_href,
+                    '区域id': two_region_id, 
+                    '区域名称': two_region_text
+                }
+                two_region_res.append(one_step_search_res)
+        return two_region_res
