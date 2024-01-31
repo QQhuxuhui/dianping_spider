@@ -79,7 +79,7 @@ class Controller():
         for url_data in url_data_list:
             count += 1
             print('当前循环序列: ', count)
-            if count<13:
+            if count<692:
                 continue;
             print('当前搜索分类: ', url_data.get('分类名称'), ', 当前搜索地区: ', url_data.get('区域名称'))
             url = url_data.get('url')
