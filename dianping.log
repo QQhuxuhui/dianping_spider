@@ -69,3 +69,5 @@
 2024-01-30 10:10:27,770 - 136009-MainThread - /usr/src/workspace/github/QQhuxuhui/dianping_spider/function/search.py[line:217] - WARNING: 搜索页请求被ban，程序终止
 2024-01-30 10:13:36,267 - 136429-MainThread - /usr/src/workspace/github/QQhuxuhui/dianping_spider/utils/get_font_map.py[line:54] - WARNING: cookie失效或者被限制访问，更新cookie或登录大众点评滑动验证
 2024-01-30 10:40:51,648 - 139958-MainThread - /usr/src/workspace/github/QQhuxuhui/dianping_spider/utils/get_font_map.py[line:54] - WARNING: cookie失效或者被限制访问，更新cookie或登录大众点评滑动验证
+2024-01-31 15:52:32,589 - 16862-MainThread - /usr/src/workspace/github/QQhuxuhui/dianping_spider/utils/get_font_map.py[line:54] - WARNING: cookie失效或者被限制访问，更新cookie或登录大众点评滑动验证
+2024-01-31 15:53:05,969 - 17019-MainThread - /usr/src/workspace/github/QQhuxuhui/dianping_spider/utils/get_font_map.py[line:54] - WARNING: cookie失效或者被限制访问，更新cookie或登录大众点评滑动验证

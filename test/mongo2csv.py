@@ -41,10 +41,10 @@ def export_all_data_to_csv(database_name, csv_filename):
 
 if __name__ == "__main__":
     # MongoDB 数据库名称
-    mongodb_database_name = 'dianping'
+    mongodb_database_name = 'url'
 
     # CSV 文件名
-    csv_filename = 'output.csv'
+    csv_filename = 'url.csv'
 
     # 导出所有数据到 CSV
     export_all_data_to_csv(mongodb_database_name, csv_filename)

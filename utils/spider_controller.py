@@ -27,6 +27,8 @@ from function.review import Review
 from function.get_encryption_requests import *
 from utils.saver.saver import saver
 from utils.spider_config import spider_config
+from pymongo import MongoClient
+
 
 
 class Controller():
@@ -60,171 +62,195 @@ class Controller():
         # Todo  其实这里挺犹豫是爬取完搜索直接详情还是爬一段详情一段
         #       本着稀释同类型访问频率的原则，暂时采用爬一段详情一段
         # 调用搜索
-        search_url, request_type = self.get_search_url(1)
-        search_res = self.s.searchParams(search_url, request_type)
-        print(search_res)
-        return;
+        # search_url, request_type = self.get_search_url(1)
+        # search_res = self.s.searchParams(search_url, request_type)
+        # print(search_res)
+        # return;
+        client = MongoClient('mongodb://127.0.0.1:27017/')
+        
+        # 选择数据库
+        db = client['dianping']
+        collection = db['url']
+        # 获取所有集合名称
+        url_data_list = list(collection.find())
 
+        count = 0;
+        # 循环处理每个集合
+        for url_data in url_data_list:
+            count += 1
+            print('当前循环序列: ', count)
+            if count<13:
+                continue;
+            print('当前搜索分类: ', url_data.get('分类名称'), ', 当前搜索地区: ', url_data.get('区域名称'))
+            url = url_data.get('url')
+            print(url)
+            self.base_url = url + '/p1'
+            for page in tqdm(range(1, spider_config.NEED_SEARCH_PAGES + 1), desc='搜索页数'):
+                print("当前搜索页:", page) 
+                # 拼凑url
+                search_url, request_type = self.get_search_url(page)
+                print('搜索地址: ', search_url)
+                """
+                {
+                    '店铺id': -,
+                    '店铺名': -,
+                    '评论总数': -,
+                    '人均价格': -,
+                    '标签1': -,
+                    '标签2': -,
+                    '店铺地址': -,
+                    '详情链接': -,
+                    '图片链接': -,
+                    '店铺均分': -,
+                    '推荐菜': -,
+                    '店铺总分': -,
+                }
+                """
+                search_res = self.s.search(search_url, request_type)
+                # search方法如果返回None，代表页面已经没有数据了
+                if not search_res:
+                    print("抓取到第",page, "页已经没有数据了, 抓取结束")
+                    break
 
-        for page in tqdm(range(1, spider_config.NEED_SEARCH_PAGES + 1), desc='搜索页数'):
-            # if page <12:
-            #     continue;
-            print("当前搜索页:", page) 
-            # 拼凑url
-            search_url, request_type = self.get_search_url(page)
-            """
-            {
-                '店铺id': -,
-                '店铺名': -,
-                '评论总数': -,
-                '人均价格': -,
-                '标签1': -,
-                '标签2': -,
-                '店铺地址': -,
-                '详情链接': -,
-                '图片链接': -,
-                '店铺均分': -,
-                '推荐菜': -,
-                '店铺总分': -,
-            }
-            """
-            search_res = self.s.search(search_url, request_type)
-            # search方法如果返回None，代表页面已经没有数据了
-            if not search_res:
-                print("抓取到第",page, "页已经没有数据了, 抓取结束")
-                break
-
-            if spider_config.NEED_DETAIL is False and spider_config.NEED_REVIEW is False:
-                for each_search_res in search_res:
-                    each_search_res.update({
-                        '店铺电话': '-',
-                        '其他信息': '-',
-                        '优惠券信息': '-',
-                    })
-                    self.saver(each_search_res, {})
-                continue
-            for each_search_res in tqdm(search_res, desc='详细爬取'):
-                each_detail_res = {}
-                each_review_res = {}
-                # 爬取详情
-                if spider_config.NEED_DETAIL:
-                    shop_id = each_search_res['店铺id']
-                    if spider_config.NEED_PHONE_DETAIL:
-                        """
-                        {
-                            '店铺id': -,
-                            '店铺名': -,
-                            '评论总数': -,
-                            '人均价格': -,
-                            '店铺地址': -,
-                            '店铺电话': -,
-                            '其他信息': -
-                        }
-                        """
-                        each_detail_res = self.d.get_detail(shop_id)
-                        # 多版本爬取格式适配
-                        each_detail_res.update({
-                            '店铺总分': '-',
-                            '店铺均分': '-',
+                print('当前页数据量:', len(search_res))
+                if spider_config.NEED_DETAIL is False and spider_config.NEED_REVIEW is False:
+                    for each_search_res in search_res:
+                        each_search_res.update({
+                            '店铺电话': '-',
+                            '其他信息': '-',
                             '优惠券信息': '-',
                         })
-                    else:
-                        """
-                        {
-                            '店铺id': -,
-                            '店铺名': -,
-                            '店铺地址': -,
-                            '店铺电话': -,
-                            '店铺总分': -,
-                            '店铺均分': -,
-                            '人均价格': -,
-                            '评论总数': -,
-                        }
-                        """
-                        hidden_info = get_basic_hidden_info(shop_id)
-                        review_and_star = get_review_and_star(shop_id)
-                        each_detail_res.update(hidden_info)
-                        each_detail_res.update(review_and_star)
-                        # 多版本爬取格式适配
-                        each_detail_res.update({
-                            '其他信息': '-',
-                            '优惠券信息': '-'
-                        })
-                    # 爬取经纬度
-                    if spider_config.NEED_LOCATION:
-                        """
-                        {
-                            '店铺id': -,
-                            '店铺名': -,
-                            '店铺纬度': -,
-                            '店铺经度': -,
-                        }
-                        """
+                        self.saver(each_search_res, {})
+                    # 如果这一页数据小于15，代表下一页已经没有数据了，直接退出
+                    if len(search_res) < 15:
+                        print("当前页数据少于15，判定下一页无数据，跳出当前页：", page, "的详细数据抓取循环")
+                        break
+                    continue
+                for each_search_res in tqdm(search_res, desc='详细爬取'):
+                    each_detail_res = {}
+                    each_review_res = {}
+                    # 爬取详情
+                    if spider_config.NEED_DETAIL:
                         shop_id = each_search_res['店铺id']
-                        lat_and_lng = get_lat_and_lng(shop_id)
-                        each_detail_res.update(lat_and_lng)
-                    else:
-                        each_detail_res.update({
-                            '店铺纬度': '-',
-                            '店铺经度': '-'
-                        })
-                    # 全局整合，将详情以及评论的相关信息拼接到search_res中。
-                    each_search_res['店铺地址'] = each_detail_res['店铺地址']
-                    each_search_res['店铺电话'] = each_detail_res['店铺电话']
-                    each_search_res['店铺总分'] = each_detail_res['店铺总分']
-                    if each_search_res['店铺均分'] == '-':
-                        each_search_res['店铺均分'] = each_detail_res['店铺均分']
-                    each_search_res['人均价格'] = each_detail_res['人均价格']
-                    each_search_res['评论总数'] = each_detail_res['评论总数']
-                    each_search_res['其他信息'] = each_detail_res['其他信息']
-                    each_search_res['优惠券信息'] = each_detail_res['优惠券信息']
-                    each_search_res['店铺纬度'] = each_detail_res['店铺纬度']
-                    each_search_res['店铺经度'] = each_detail_res['店铺经度']
-                # 爬取评论
-                if spider_config.NEED_REVIEW:
-                    shop_id = each_search_res['店铺id']
-                    if spider_config.NEED_REVIEW_DETAIL:
-                        """
-                        {
-                            '店铺id': -,
-                            '评论摘要': -,
-                            '评论总数': -,
-                            '好评个数': -,
-                            '中评个数': -,
-                            '差评个数': -,
-                            '带图评论个数': -,
-                            '精选评论': -,
-                        }
-                        """
-                        each_review_res = self.r.get_review(shop_id)
-                        each_review_res.update({'推荐菜': '-'})
-                    else:
-                        """
-                        {
-                            '店铺id': -,
-                            '评论摘要': -,
-                            '评论总数': -,
-                            '好评个数': -,
-                            '中评个数': -,
-                            '差评个数': -,
-                            '带图评论个数': -,
-                            '精选评论': -,
-                            '推荐菜': -,
-                        }
-                        """
-                        each_review_res = get_basic_review(shop_id)
-
+                        if spider_config.NEED_PHONE_DETAIL:
+                            """
+                            {
+                                '店铺id': -,
+                                '店铺名': -,
+                                '评论总数': -,
+                                '人均价格': -,
+                                '店铺地址': -,
+                                '店铺电话': -,
+                                '其他信息': -
+                            }
+                            """
+                            each_detail_res = self.d.get_detail(shop_id)
+                            # 多版本爬取格式适配
+                            each_detail_res.update({
+                                '店铺总分': '-',
+                                '店铺均分': '-',
+                                '优惠券信息': '-',
+                            })
+                        else:
+                            """
+                            {
+                                '店铺id': -,
+                                '店铺名': -,
+                                '店铺地址': -,
+                                '店铺电话': -,
+                                '店铺总分': -,
+                                '店铺均分': -,
+                                '人均价格': -,
+                                '评论总数': -,
+                            }
+                            """
+                            hidden_info = get_basic_hidden_info(shop_id)
+                            review_and_star = get_review_and_star(shop_id)
+                            each_detail_res.update(hidden_info)
+                            each_detail_res.update(review_and_star)
+                            # 多版本爬取格式适配
+                            each_detail_res.update({
+                                '其他信息': '-',
+                                '优惠券信息': '-'
+                            })
+                        # 爬取经纬度
+                        if spider_config.NEED_LOCATION:
+                            """
+                            {
+                                '店铺id': -,
+                                '店铺名': -,
+                                '店铺纬度': -,
+                                '店铺经度': -,
+                            }
+                            """
+                            shop_id = each_search_res['店铺id']
+                            lat_and_lng = get_lat_and_lng(shop_id)
+                            each_detail_res.update(lat_and_lng)
+                        else:
+                            each_detail_res.update({
+                                '店铺纬度': '-',
+                                '店铺经度': '-'
+                            })
                         # 全局整合，将详情以及评论的相关信息拼接到search_res中。
-                        each_search_res['推荐菜'] = each_review_res['推荐菜']
-                        # 对于已经给到search_res中的信息，删除
-                        each_review_res.pop('推荐菜')
+                        each_search_res['店铺地址'] = each_detail_res['店铺地址']
+                        each_search_res['店铺电话'] = each_detail_res['店铺电话']
+                        each_search_res['店铺总分'] = each_detail_res['店铺总分']
+                        if each_search_res['店铺均分'] == '-':
+                            each_search_res['店铺均分'] = each_detail_res['店铺均分']
+                        each_search_res['人均价格'] = each_detail_res['人均价格']
+                        each_search_res['评论总数'] = each_detail_res['评论总数']
+                        each_search_res['其他信息'] = each_detail_res['其他信息']
+                        each_search_res['优惠券信息'] = each_detail_res['优惠券信息']
+                        each_search_res['店铺纬度'] = each_detail_res['店铺纬度']
+                        each_search_res['店铺经度'] = each_detail_res['店铺经度']
+                    # 爬取评论
+                    if spider_config.NEED_REVIEW:
+                        shop_id = each_search_res['店铺id']
+                        if spider_config.NEED_REVIEW_DETAIL:
+                            """
+                            {
+                                '店铺id': -,
+                                '评论摘要': -,
+                                '评论总数': -,
+                                '好评个数': -,
+                                '中评个数': -,
+                                '差评个数': -,
+                                '带图评论个数': -,
+                                '精选评论': -,
+                            }
+                            """
+                            each_review_res = self.r.get_review(shop_id)
+                            each_review_res.update({'推荐菜': '-'})
+                        else:
+                            """
+                            {
+                                '店铺id': -,
+                                '评论摘要': -,
+                                '评论总数': -,
+                                '好评个数': -,
+                                '中评个数': -,
+                                '差评个数': -,
+                                '带图评论个数': -,
+                                '精选评论': -,
+                                '推荐菜': -,
+                            }
+                            """
+                            each_review_res = get_basic_review(shop_id)
+
+                            # 全局整合，将详情以及评论的相关信息拼接到search_res中。
+                            each_search_res['推荐菜'] = each_review_res['推荐菜']
+                            # 对于已经给到search_res中的信息，删除
+                            each_review_res.pop('推荐菜')
 
 
-                self.saver(each_search_res, each_review_res)
+                    self.saver(each_search_res, each_review_res)
                 # 如果这一页数据小于15，代表下一页已经没有数据了，直接退出
                 if len(search_res) < 15:
                     print("当前页数据少于15，判定下一页无数据，跳出当前页：", page, "的详细数据抓取循环")
                     break
+
+
+
 
     def get_review(self, shop_id, detail=False):
         if detail:
