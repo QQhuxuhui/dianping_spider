@@ -306,16 +306,25 @@ class RequestsUtils():
                 proxy_url = spider_config.HTTP_LINK
                 r = requests.get(proxy_url)
                 r_json = r.json()
+                print(r_json)
                 # json解析方式替换
                 # for proxy in r_json['Data']:
-                for proxy in r_json:
+                for address in r_json.get('data').get('ips'):
+                    ip = address.get('server').split(':')[0];
+                    port = address.get('server').split(':')[1];
                     # 重复添加，多次利用
                     for _ in range(repeat_nub):
                         # self.proxy_pool.append([proxy['Ip'], proxy['Port']])
-                        self.proxy_pool.append([proxy['ip'], proxy['port']])
+                        self.proxy_pool.append([ip, port])                    
+                # for proxy in r_json:
+                #     # 重复添加，多次利用
+                #     for _ in range(repeat_nub):
+                #         # self.proxy_pool.append([proxy['Ip'], proxy['Port']])
+                #         self.proxy_pool.append([proxy['ip'], proxy['port']])
             # 获取ip
             proxies = self.http_proxy_utils(self.proxy_pool[0][0], self.proxy_pool[0][1])
             self.proxy_pool.remove(self.proxy_pool[0])
+            print(proxies)
             return proxies
         # 秘钥提取模式
         elif spider_config.KEY_EXTRACT:
