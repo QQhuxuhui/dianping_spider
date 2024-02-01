@@ -73,18 +73,19 @@ class Controller():
         collection = db['url_1']
         # 获取所有集合名称
         url_data_list = list(collection.find())
+        print(len(url_data_list))
 
         count = 0;
         # 循环处理每个集合
         for url_data in url_data_list:
             count += 1
-            if count<962:
+            if count<6:
                 continue;
             print('当前循环序列: ', count, '总共需要: ', len(url_data_list))
             print('当前搜索分类: ', url_data.get('分类名称'), ', 当前搜索地区: ', url_data.get('区域名称'))
             url = url_data.get('url')
             print(url)
-            self.base_url = url + '/p1'
+            self.base_url = url + 'p1'
             for page in tqdm(range(1, spider_config.NEED_SEARCH_PAGES + 1), desc='搜索页数'):
                 print("当前搜索页:", page) 
                 # 拼凑url
@@ -120,6 +121,7 @@ class Controller():
                             '其他信息': '-',
                             '优惠券信息': '-',
                         })
+                        # print('保存信息: ', each_search_res)
                         self.saver(each_search_res, {})
                     # 如果这一页数据小于15，代表下一页已经没有数据了，直接退出
                     if len(search_res) < 15:

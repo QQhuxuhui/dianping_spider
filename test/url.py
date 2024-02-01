@@ -41,7 +41,10 @@ for classfy in classfys:
     url = classfy.get('href')
     for region in regions_list:
         print('区域名称:', region.get('区域名称'), ', 区域ID:', region.get('区域id'), ', 分类名称', classfy.get('分类名称'))
-        url_new = url + 'r' + region.get('区域id')
+        href = region.get('href');
+        last_slash_index = href.rfind('/')
+        regionId = href[last_slash_index + 1:]
+        url_new = url + regionId
         data = {
             'url': url_new,
             '区域名称': region.get('区域名称'),
