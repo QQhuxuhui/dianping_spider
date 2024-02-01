@@ -185,7 +185,7 @@ class Search():
         region_list = self.regions('https://www.dianping.com/search/keyword/92/10_%E7%BE%8E%E9%A3%9F/r3862',request_type)
         for region in region_list:
             print('保存区域：', region)
-            saver.save_data(region, 'region')
+            saver.save_data(region, 'region_1')
 
 
         # 获取分类列表
@@ -204,23 +204,32 @@ class Search():
                 classfy_text = classfy.find('span').text
             except:
                 classfy_text = None   
-            if classfy_href is not None and classfy_id is not None and classfy_text is not None:             
-                # 获取子分类
-                print("子分类连接：", classfy_href)
-                classfy_sub_list = self.classfySub(classfy_href, request_type);
-            if not classfy_sub_list: # 子分类为空，则以第一级分类查询
+            # 一级分类
+            if classfy_href is not None and classfy_id is not None and classfy_text is not None:  
                 one_step_search_res = {
                     'href': classfy_href,
                     '分类id': classfy_id, 
                     '分类名称': classfy_text
                 }
-                # print(one_step_search_res)
-                classfy_sub_list.append(one_step_search_res)
+                print(one_step_search_res)
+            # print(one_step_search_res)
+            # if classfy_href is not None and classfy_id is not None and classfy_text is not None:             
+            #     # 获取子分类
+            #     print("子分类连接：", classfy_href)
+            #     classfy_sub_list = self.classfySub(classfy_href, request_type);
+            # if not classfy_sub_list: # 子分类为空，则以第一级分类查询
+            #     one_step_search_res = {
+            #         'href': classfy_href,
+            #         '分类id': classfy_id, 
+            #         '分类名称': classfy_text
+            #     }
+            #     # print(one_step_search_res)
+            #     classfy_sub_list.append(one_step_search_res)
                 
-            classfy_list.extend(classfy_sub_list)
+            classfy_list.append(one_step_search_res)
         for classfy in classfy_list:
             print('保存分类：', classfy)
-            saver.save_data(classfy, 'classfy')
+            saver.save_data(classfy, 'classfy_1')
 
         return classfy_list
     
@@ -278,17 +287,23 @@ class Search():
                 classfy_text = classfy_sub.find('span').text
             except:
                 classfy_text = None    
-            # print(classfy_href)
-            # print(classfy_id)
-            # print(classfy_text)
+            # 一级分类
             if classfy_id is not None and classfy_href is not None and classfy_text:
                 one_step_search_res = {
                     'href': classfy_href,
                     '分类id': classfy_id, 
                     '分类名称': classfy_text
                 }
-                # print(one_step_search_res)
-                search_res.append(one_step_search_res)
+            # print(one_step_search_res)
+            search_res.append(one_step_search_res)                
+            # if classfy_id is not None and classfy_href is not None and classfy_text:
+            #     one_step_search_res = {
+            #         'href': classfy_href,
+            #         '分类id': classfy_id, 
+            #         '分类名称': classfy_text
+            #     }
+            #     # print(one_step_search_res)
+            #     search_res.append(one_step_search_res)
         return search_res    
     
     #  获取所有行政区地点位置，这里的url需要写死，爬取徐州的就写死：https://www.dianping.com/search/keyword/92/10_%E7%BE%8E%E9%A3%9F/r3862
@@ -340,20 +355,16 @@ class Search():
             try:
                 one_region_text = one_region.find('span').text
             except:
-                one_region_text = None    
-            # print(classfy_href)
-            # print(classfy_id)
-            # print(classfy_text)
-            if one_region_id is not None and one_region_href is not None and one_region_text:
-                # one_step_search_res = {
-                #     'href': one_region_href,
-                #     'id': one_region_id, 
-                #     'text': one_region_text
-                # }
-                result = self.subRegion(one_region_href, request_type)
-                search_res.extend(result)
-                # print(search_res)
-                # search_res.append(one_step_search_res)
+                one_region_text = None 
+            one_step_search_res = {
+                'href': one_region_href,
+                '区域id': one_region_id, 
+                '区域名称': one_region_text
+            }
+            search_res.append(one_step_search_res)                   
+            # if one_region_id is not None and one_region_href is not None and one_region_text:
+            #     result = self.subRegion(one_region_href, request_type)
+            #     search_res.extend(result)
         return search_res      
     
     # 通过一级区域连接获取二级区域

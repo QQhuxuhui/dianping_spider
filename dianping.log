@@ -71,3 +71,9 @@
 2024-01-30 10:40:51,648 - 139958-MainThread - /usr/src/workspace/github/QQhuxuhui/dianping_spider/utils/get_font_map.py[line:54] - WARNING: cookie失效或者被限制访问，更新cookie或登录大众点评滑动验证
 2024-01-31 15:52:32,589 - 16862-MainThread - /usr/src/workspace/github/QQhuxuhui/dianping_spider/utils/get_font_map.py[line:54] - WARNING: cookie失效或者被限制访问，更新cookie或登录大众点评滑动验证
 2024-01-31 15:53:05,969 - 17019-MainThread - /usr/src/workspace/github/QQhuxuhui/dianping_spider/utils/get_font_map.py[line:54] - WARNING: cookie失效或者被限制访问，更新cookie或登录大众点评滑动验证
+2024-01-31 18:29:10,546 - 31059-MainThread - /usr/src/workspace/github/QQhuxuhui/dianping_spider/function/search.py[line:46] - WARNING: 搜索页请求被ban，程序终止
+2024-01-31 18:58:20,395 - 74891-MainThread - /usr/src/workspace/github/QQhuxuhui/dianping_spider/function/search.py[line:46] - WARNING: 搜索页请求被ban，程序终止
+2024-02-01 11:40:05,221 - 1907-MainThread - /usr/src/workspace/github/QQhuxuhui/dianping_spider/utils/requests_utils.py[line:55] - INFO: 使用cookie池
+2024-02-01 11:40:34,632 - 2051-MainThread - /usr/src/workspace/github/QQhuxuhui/dianping_spider/utils/requests_utils.py[line:55] - INFO: 使用cookie池
+2024-02-01 11:40:37,204 - 2051-MainThread - /usr/src/workspace/github/QQhuxuhui/dianping_spider/utils/requests_utils.py[line:252] - INFO: 所有cookie均已失效，替换（替换后等待一段时间会自动继续）或等待解封
+2024-02-01 11:41:09,206 - 2172-MainThread - /usr/src/workspace/github/QQhuxuhui/dianping_spider/utils/get_font_map.py[line:54] - WARNING: cookie失效或者被限制访问，更新cookie或登录大众点评滑动验证

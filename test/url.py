@@ -6,7 +6,7 @@ client = pymongo.MongoClient("mongodb://localhost:27017/")  # 根据实际情况
 # 选择数据库
 db = client["dianping"]  # 将 "your_database_name" 替换为你的数据库名称
 # 选择集合（类似于关系数据库中的表）
-collection = db["region"]  # 将 "region" 替换为你的集合名称
+collection = db["region_1"]  # 将 "region" 替换为你的集合名称
 
 # 查询数据 - 获取所有文档
 query = {}
@@ -20,7 +20,7 @@ regions = collection.find(query)
 
 
 # 选择集合（类似于关系数据库中的表）
-collection = db["classfy"]  # 将 "region" 替换为你的集合名称
+collection = db["classfy_1"]  # 将 "region" 替换为你的集合名称
 
 # 查询数据 - 获取所有文档
 query = {}
@@ -55,7 +55,7 @@ for classfy in classfys:
 
 
 # 选择集合（类似于关系数据库中的表）
-collection = db["url"]  # 将 "your_collection_name" 替换为你的集合名称
+collection = db["url_1"]  # 将 "your_collection_name" 替换为你的集合名称
 
 # 将多个文档插入到集合中
 insert_result = collection.insert_many(url_data_list)

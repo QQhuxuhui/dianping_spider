@@ -70,7 +70,7 @@ class Controller():
         
         # 选择数据库
         db = client['dianping']
-        collection = db['url']
+        collection = db['url_1']
         # 获取所有集合名称
         url_data_list = list(collection.find())
 

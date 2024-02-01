@@ -45,7 +45,7 @@ class MongoSaver():
         :param data_type:
         :return:
         """
-        assert data_type in ['search', 'detail', 'review', 'region', 'classfy']
+        assert data_type in ['search', 'detail', 'review', 'region', 'classfy','region_1', 'classfy_1']
         if data_type == 'search':
             self.save_search_list(data)
         elif data_type == 'detail':
@@ -55,7 +55,11 @@ class MongoSaver():
         elif data_type == 'region':
             self.save_region_list(data)
         elif data_type == 'classfy':
-            self.save_classfy_list(data)            
+            self.save_classfy_list(data)    
+        elif data_type == 'region_1':
+            self.save_region_1_list(data)
+        elif data_type == 'classfy_1':
+            self.save_classfy_1_list(data)                        
         else:
             raise Exception
 
@@ -109,5 +113,27 @@ class MongoSaver():
         :return:
         """
         col = self.database['classfy']
+        col.delete_many({'分类id': data['分类id']})
+        col.insert(data)
+
+
+    def save_region_1_list(self, data):
+        """
+        保存地区数据
+        :param data:
+        :return:
+        """
+        col = self.database['region_1']
+        col.delete_many({'区域id': data['区域id']})
+        col.insert(data)
+
+
+    def save_classfy_1_list(self, data):
+        """
+        保存分类数据
+        :param data:
+        :return:
+        """
+        col = self.database['classfy_1']
         col.delete_many({'分类id': data['分类id']})
         col.insert(data)
