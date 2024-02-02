@@ -79,7 +79,7 @@ class Controller():
         # 循环处理每个集合
         for url_data in url_data_list:
             count += 1
-            if count<6:
+            if count<375:
                 continue;
             print('当前循环序列: ', count, '总共需要: ', len(url_data_list))
             print('当前搜索分类: ', url_data.get('分类名称'), ', 当前搜索地区: ', url_data.get('区域名称'))

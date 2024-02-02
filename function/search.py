@@ -44,6 +44,7 @@ class Search():
         """
         if self.is_ban and spider_config.USE_COOKIE_POOL is False:
             logger.warning('搜索页请求被ban，程序终止')
+            print(search_url)
             sys.exit()
 
         r = requests_util.get_requests(search_url, request_type=request_type)

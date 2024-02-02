@@ -19,7 +19,7 @@ def write_data_to_csv(data, csv_filename):
         for row in data:
             writer.writerow(row)
 
-def export_all_data_to_csv(database_name, csv_filename):
+def export_all_data_to_csv(database_name, collection_name, csv_filename):
     # 连接 MongoDB
     client = MongoClient('mongodb://127.0.0.1:27017/')
     
@@ -30,9 +30,11 @@ def export_all_data_to_csv(database_name, csv_filename):
     collections = db.list_collection_names()
 
     # 循环处理每个集合
-    for collection_name in collections:
-        print(f"Exporting data from collection: {collection_name}")
-        data = read_data_from_collection(db, collection_name)
+    for collection in collections:
+        if collection != collection_name:
+            continue;
+        print(f"Exporting data from collection: {collection}")
+        data = read_data_from_collection(db, collection)
         write_data_to_csv(data, csv_filename)
 
     # 关闭 MongoDB 连接
@@ -41,10 +43,12 @@ def export_all_data_to_csv(database_name, csv_filename):
 
 if __name__ == "__main__":
     # MongoDB 数据库名称
-    mongodb_database_name = 'url'
+    mongodb_database_name = 'dianping'
+
+    collection_name = 'info'
 
     # CSV 文件名
-    csv_filename = 'url.csv'
+    csv_filename = collection_name + '.csv'
 
     # 导出所有数据到 CSV
-    export_all_data_to_csv(mongodb_database_name, csv_filename)
+    export_all_data_to_csv(mongodb_database_name, collection_name, csv_filename)
